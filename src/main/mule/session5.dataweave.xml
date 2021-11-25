@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="611dbc1b-badc-41ed-8fe1-286bb4933e69" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="session5.dataweaveFlow" doc:id="2ac55f19-e12b-4fed-82b5-8c1360a05517" >
+		<http:listener doc:name="Listener" doc:id="cb226820-8d3c-4296-a1c8-8688f8ebe382" config-ref="HTTP_Listener_config" path="/test"/>
+		<ee:transform doc:name="Transform Message" doc:id="f55add01-19ec-4d80-9374-1ff997eaac18" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+
+output application/json
+var a = [
+	{
+		name : "Thanu",
+		id : "123",
+		org : ["MuleSoft", "atos"]
+	},
+	{
+		name : "kiran",
+		id : "234",
+		org : ["Atos", "apple"]
+	},
+	{
+		name : "Raj",
+		id : "345",
+		org : ["Rajiawesome", "google"]
+	},
+	{
+		name : "Ram",
+		id : "456",
+		org : ["Ramiawesome", "apple"]
+	}
+	
+]
+---
+a map ((key,num) -> {
+	
+		"Candidate Name" : upper(key.name),
+		"ID Number" : key.id,
+	"Company" : key.org map{
+		"company-name" : upper(key.name) ++ "-" ++ upper($)
+	},
+	
+	"Index" : num
+	
+})
+
+//show them map(key,index) too]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Map object" doc:id="fc3902d2-ff53-495f-89ce-8c5b7de977f1">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+var a = 
+	{
+		name : "Thanu",
+		id : "123",
+		org : "MuleSoft",
+	}
+
+---
+
+a mapObject ((value, key, index) ->
+	 {
+	"what is the value" : value,
+	//"what is the key" : key,
+	//"what is the index" : index
+	
+	
+})]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="simple wayconverting one format to another format" doc:id="d823cf90-c723-495d-9dcb-d9b91e93a318">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+var a = 
+	{
+		"name" : upper("Thanu"),
+		"id" : "123",
+		"org" : "MuleSoft",
+		"name" : upper("kiran"),
+		"id" : "234",
+		"org" : "atos",
+		"name" : upper("raj"),
+		"id" : "456",
+		"org" : "apple",
+		"name" : upper("ram"),
+		"id" : "567",
+		"org" : "google"
+	}
+
+output application/csv
+
+---
+ a]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Map way converting date one format to another format" doc:id="64a788ef-2f59-4f01-95bd-901061318f0f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+var a = [
+	{
+		name : "Thanu",
+		id : 123,
+		org : "MuleSoft"
+	},
+	{
+		name : "kiran",
+		id : 234,
+		org : "Atos"
+	},
+	{
+		name : "Raj",
+		id : 345,
+		org : "Mule"
+	},
+	{
+		name : "Ram",
+		id : null,
+		org : "Ramiawesome"
+	}
+	
+]
+---
+
+ a map 
+{
+	"candidate" : $.name,
+	"Id number" : $.id,
+	"Company Name" : $.org,
+	"uniqueID" : $.name ++ "-" ++ ($.id default "no ID") ++ "-" ++ $.org //show null error scenarios 
+	//show usege of () where to place and also attribute values  
+	
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="reduce" doc:id="38fa9b8a-41ea-436d-8e58-9ddf38558d82" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+
+var a = [
+	{
+		name : "Thanu",
+		id : 123,
+		org : "MuleSoft"
+	},
+	{
+		name : "kiran",
+		id : 234,
+		org : "Atos"
+	},
+	{
+		name : "Raj",
+		id : 345,
+		org : "Mule"
+	},
+	{
+		name : "Ram",
+		id : 567,
+		org : "Ramiawesome"
+	}
+	
+]
+---
+ a reduce ($ ++ $$)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Pluck" doc:id="265dbb4c-d3dd-44a8-8701-881ce219d863" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var a = 
+	
+	{
+		name : "Thanu",
+		id : 123,
+		org : "MuleSoft"
+	}
+	
+---
+a pluck (value, key, index) -> {
+	
+	//"what is value" : value,
+	//"what is key" : key,
+	//"what is index" : index
+}
+
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="flatten" doc:id="9e865186-7101-43c9-8f05-7426c3a81b84" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var a = [
+	{
+		name : "Thanu",
+		id : 123,
+		org : "MuleSoft"
+	},
+	{
+		name : "kiran",
+		id : 234,
+		org : "Atos"
+	},
+	{
+		name : "Raj",
+		id : 345,
+		org : "Mule"
+	},
+	{
+		name : "Ram",
+		id : 567,
+		org : "Ramiawesome"
+	}
+	
+]
+var b = [
+	{
+		name : "B-THANU",
+		id : 123,
+		org : "B-MuleSoft"
+	},
+	{
+		name : "B-KIRAN",
+		id : 234,
+		org : "B-Atos"
+	},
+	{
+		name : "B-RAJ",
+		id : 345,
+		org : "B-Mule"
+	},
+	{
+		name : "B-RAM",
+		id : 567,
+		org : "B-Ramiawesome"
+	}
+	
+]
+---
+
+flatten((a map upper($.org)) + (b map lower($.name)) + (a map ($.id)))]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="filtter" doc:id="31d56b08-6cde-49f3-aefd-31681a2ae08d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var a = [
+	{
+		name : "Thanu",
+		id : 123,
+		org : "MuleSoft"
+	},
+	{
+		name : "kiran",
+		id : 234,
+		org : "Atos"
+	},
+	{
+		name : "Raj",
+		id : 345,
+		org : "Mule"
+	},
+	{
+		name : "Ram",
+		id : 567,
+		org : "Ramiawesome"
+	}
+	
+]
+var b = [
+	{
+		name : "B-THANU",
+		id : 12,
+		org : "B-MuleSoft"
+	},
+	{
+		name : "B-KIRAN",
+		id : 285,
+		org : "B-Atos"
+	},
+	{
+		name : "B-RAJ",
+		id : 357,
+		org : "B-Mule"
+	},
+	{
+		name : "B-RAM",
+		id : 599,
+		org : "B-Ramiawesome"
+	}
+	
+]
+var c = [
+	{
+		name : "Ckiran",
+		id : "324",
+		org : "mule"
+	},
+	{
+		name : "CThanu",
+		id : "453",
+		org : "MuleSoft"
+	}
+]
+---
+ ((a map {
+ 	name : $.name,
+ 	id : $.id,
+ 	org : $.org
+ }) filter $.id > 200) +
+ ((b map{
+ 	name : $.name,
+ 	id : $.id,
+ 	org : $.org
+ }) groupBy $.name)  +
+ ((c map {
+ 	name : $.name,
+ 	id : $.id,
+ 	org : $.org
+ }) orderBy $.id)
+ 
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="filter /status/group" doc:id="ffd901b6-e1c5-4ff4-a007-6285554e1006" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+var a = [
+	{
+		name : "Thanu",
+		marks : 23,
+		org : "MuleSoft"
+	},
+	{
+		name : "kiran",
+		marks : 35,
+		org : "Atos"
+	},
+	{
+		name : "Raj",
+		marks : 25,
+		org : "Mule"
+	},
+	{
+		name : "Ram",
+		marks : 67,
+		org : "Ramiawesome"
+	},
+	{
+		name : "siri",
+		marks : 47,
+		org : "Ramiawesome"
+	}
+	
+]
+---
+((a map {
+ 	name : $.name,
+ 	marks : $.marks,
+ 	org : $.org,
+ 	Status : if($.marks > 34) "PASS" else "FAIL"
+ }) groupBy $.Status)."FAIL" 
+
+ 
+ 
+ 	
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="XML attributes etc.." doc:id="1da7651e-68b1-4dad-8e47-5649e87e6fb5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+var a = [
+	{
+		name : "Thanu",
+		marks : 23,
+		org : "MuleSoft",
+		Paymentdue : 250,
+		Months : 10
+	},
+	{
+		name : "kiran",
+		marks : 35,
+		org : "Atos",
+		Paymentdue : 250,
+		Months : 8
+	},
+	{
+		name : "Raj",
+		marks : 25,
+		org : "Mule",
+		Paymentdue : 250,
+		Months : 2
+	},
+	{
+		name : "Ram",
+		marks : 67,
+		org : "Ramiawesome",
+		Paymentdue : 250,
+		Months : 5
+	},
+	{
+		name : "siri",
+		marks : 47,
+		org : "Ramiawesome",
+		Paymentdue : 250,
+		Months : 3
+	}
+	
+]
+---
+StudentDetails : 
+({ 
+(a map {
+	Student @(Id: $.marks): {
+ 	name : $.name,
+ 	org : $.org,
+ 	Paymentdue : $.Paymentdue * $.Months,
+ 	Status : if($.marks > 34) "PASS" else "FAIL"
+ 	}
+ 	
+ })
+}) groupBy $.Status]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Writting custom function" doc:id="2e0d8eb0-a3a9-4618-8241-d9a8cf63e015" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var a = [
+{
+		name : "Thanu",
+		id : 23,
+		"maths" : 55,
+		"Physics" : 45,
+		"Chemistry" : 52		
+},
+{
+		name : "kiran",
+		id : 35,
+		"maths" : 50,
+		"Physics" : 20,
+		"Chemistry" : 21	
+		
+},
+{
+		name : "Raj",
+		id : 25,
+		"maths" : 40,
+		"Physics" : 25,
+		"Chemistry" : 29	
+		
+},
+{
+		name : "Ram",
+		id : 67,
+		"maths" : 60,
+		"Physics" : 20,
+		"Chemistry" : 11	
+		
+},
+{
+		name : "siri",
+		id : 47,
+		"maths" : 70,
+		"Physics" : 30,
+		"Chemistry" : 45	
+	
+}
+	
+]
+fun checkresult (marks) = if (marks >50) "PASS" else "FAIL"
+fun checkresultphy (marks) = if (marks >19) "PASS" else "FAIL"
+---
+a map {
+"StudentName" : $.name,
+"StudentRollNumber" : $.id,
+"SubjectWiseResult" : {
+	"Maths" : {marks : $.mathstotal, status : checkresult($.mathstotal)},
+	"Physics" : {marks : $.Physics, status : checkresultphy($.Physics)},
+	"Chemistry" : {marks : $.Chemistry, status : checkresultphy($.Chemistry)}
+	
+}
+	
+} ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="DWL" doc:id="870dc7a8-5a87-405c-a414-4c96c2003a85" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import Modules::firstexternalfile
+output application/json
+---
+firstexternalfile::convertcase ("HELLO WORLD")]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="session5.dataweaveFlow1" doc:id="24f3bc91-3981-49e9-aebf-fa86e05410a4" >
+		<set-payload value='#["Hello Thanu"]' doc:name="Private flow" doc:id="70755c75-a531-4a58-a66b-3adb8c355fe9" />
+	</flow>
+	<flow name="session5.dataweaveFlow2" doc:id="16a4383c-cf2b-466f-af97-6b09a844df73" >
+		<http:listener doc:name="Listener" doc:id="e956950d-92ed-4056-827d-c382f65bc15e" config-ref="HTTP_Listener_config" path="/dataweave"/>
+		<ee:transform doc:name="mule lookup" doc:id="aeadb1f6-03b6-4413-b9eb-a249a3e3eeb3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+message : Mule::lookup("session5.dataweaveflow1", "How are you")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
